@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using OMS.API.Models.Dtos.CategoryDto;
 using OMS.API.Models.Dtos.ProductDto;
+using OMS.Data.Model.Entities;
 using OMS.Maps;
 using OMS.Queries.Interfaces;
 
@@ -16,6 +18,17 @@ namespace OMS.Controllers
         {
             _queryProcessor = queryProcessor;
             _autoMapper = autoMapper;
+        }
+
+        /// <summary>
+        /// Возвращает список всех продуктов
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public IQueryable<ProductDtoGet> GetAll()
+        {
+            var result = _queryProcessor.Get();
+            return _autoMapper.Map<Product, ProductDtoGet>(result);
         }
 
         /// <summary>

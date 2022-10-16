@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Hangfire;
+using Microsoft.EntityFrameworkCore;
 using OMS.API.Models.Dtos.ProductDto;
 using OMS.Data.Access.DAL;
 using OMS.Data.Model.Entities;
@@ -25,7 +26,6 @@ namespace OMS.Queries.QueryProcessors
         public IQueryable<Product> Get()
         {
             return _cacheService(cacheTech).GetCache<Product>(_unitOfWork, cacheKey);
-            //return GetQuery();
         }
 
         private IQueryable<Product> GetQuery()
@@ -55,6 +55,8 @@ namespace OMS.Queries.QueryProcessors
             await this._unitOfWork.Add(product, token);
             await this._unitOfWork.CommitAsync(token);
 
+            BackgroundJob.Enqueue(() => _cacheService(cacheTech).RefreshCacheAsync<Product>(_unitOfWork, cacheKey));
+
             return product;
         }
 
@@ -71,6 +73,8 @@ namespace OMS.Queries.QueryProcessors
 
             await _unitOfWork.CommitAsync(token);
 
+            BackgroundJob.Enqueue(() => _cacheService(cacheTech).RefreshCacheAsync<Product>(_unitOfWork, cacheKey));
+
             return product;
         }
 
@@ -80,6 +84,8 @@ namespace OMS.Queries.QueryProcessors
 
             _unitOfWork.Delete(product, token);
             await _unitOfWork.CommitAsync(token);
+
+            BackgroundJob.Enqueue(() => _cacheService(cacheTech).RefreshCacheAsync<Category>(_unitOfWork, cacheKey));
         }
     }
 }
