@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Hangfire;
+using Microsoft.EntityFrameworkCore;
 using OMS.API.Models.Dtos.CategoryDto;
 using OMS.Data.Access.DAL;
 using OMS.Data.Model.Entities;
@@ -11,7 +12,7 @@ namespace OMS.Queries.QueryProcessors
 {
     public class CategoryQueryProcessor : ICategoryQueryProcessor
     {
-        private IUnitOfWork _unitOfWork;    
+        private IUnitOfWork _unitOfWork;
         private readonly string cacheKey = $"{typeof(Category)}";
         private readonly static CacheTech cacheTech = CacheTech.Memory;
 
@@ -49,6 +50,8 @@ namespace OMS.Queries.QueryProcessors
             await this._unitOfWork.Add(category, token);
             await this._unitOfWork.CommitAsync(token);
 
+            BackgroundJob.Enqueue(() => _cacheService(cacheTech).RefreshCacheAsync<Category>(_unitOfWork, cacheKey));
+            
             return category;
         }
 
@@ -61,6 +64,8 @@ namespace OMS.Queries.QueryProcessors
 
             await _unitOfWork.CommitAsync(token);
 
+            BackgroundJob.Enqueue(() => _cacheService(cacheTech).RefreshCacheAsync<Category>(_unitOfWork, cacheKey));
+
             return category;
         }
 
@@ -70,13 +75,8 @@ namespace OMS.Queries.QueryProcessors
 
             _unitOfWork.Delete(category, token);
             await _unitOfWork.CommitAsync(token);
-        }
-       
-        public async Task RefreshCache()
-        {
-            _cacheService(cacheTech).Remove(cacheKey);
-            var cachedList = await _unitOfWork.Query<Category>().ToListAsync();
-            _cacheService(cacheTech).Set(cacheKey, cachedList);
+
+            BackgroundJob.Enqueue(() => _cacheService(cacheTech).RefreshCacheAsync<Category>(_unitOfWork, cacheKey));
         }
     }
 }

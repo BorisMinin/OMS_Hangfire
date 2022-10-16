@@ -2,6 +2,8 @@
 using OMS.API.Models.Dtos.ProductDto;
 using OMS.Data.Access.DAL;
 using OMS.Data.Model.Entities;
+using OMS.Queries.AppHelpers;
+using OMS.Queries.CrossCuttingConcerns;
 using OMS.Queries.Interfaces;
 
 namespace OMS.Queries.QueryProcessors
@@ -9,14 +11,21 @@ namespace OMS.Queries.QueryProcessors
     public class ProductQueryProcessor : IProductQueryProcessor
     {
         private IUnitOfWork _unitOfWork;
+        private readonly string cacheKey = $"{typeof(Category)}";
+        private readonly static CacheTech cacheTech = CacheTech.Memory;
 
-        public ProductQueryProcessor(IUnitOfWork unitOfWork)
+        private Func<CacheTech, ICacheService> _cacheService;
+
+        public ProductQueryProcessor(IUnitOfWork unitOfWork, Func<CacheTech, ICacheService> cacheService)
         {
             _unitOfWork = unitOfWork;
+            _cacheService = cacheService;
         }
+        
         public IQueryable<Product> Get()
         {
-            return GetQuery();
+            return _cacheService(cacheTech).GetCache<Product>(_unitOfWork, cacheKey);
+            //return GetQuery();
         }
 
         private IQueryable<Product> GetQuery()
