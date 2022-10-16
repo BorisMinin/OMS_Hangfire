@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OMS.API.Models.Dtos.CategoryDto;
+using OMS.Data.Model.Entities;
 using OMS.Maps;
 using OMS.Queries.Interfaces;
 
@@ -17,6 +18,17 @@ namespace OMS.Controllers
             _queryProcessor = queryProcessor;
             _autoMapper = autoMapper;
         }
+
+        /// <summary>
+        /// Возвращает список всех категорий
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public IQueryable<CategoryDtoGet> GetAll()
+        {
+            var result = _queryProcessor.Get();
+            return _autoMapper.Map<Category, CategoryDtoGet>(result);
+        } 
 
         /// <summary>
         /// возвращает запись Category по идентификатору
@@ -68,5 +80,6 @@ namespace OMS.Controllers
         {
             await this._queryProcessor.Delete(id, token);
         }
+    
     }
 }

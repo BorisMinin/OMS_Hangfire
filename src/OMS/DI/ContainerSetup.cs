@@ -5,6 +5,8 @@ using OMS.Queries.QueryProcessors;
 using OMS.Maps;
 using OMS.Queries.AppHelpers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Hangfire;
 
 namespace OMS.DI
 {
@@ -15,15 +17,21 @@ namespace OMS.DI
             AddUow(services, configuration);
             AddQueries(services);
             ConfigureAutoMapper(services);
+            AddCache(services, configuration);
         }
         private static void AddUow(IServiceCollection services, IConfiguration configuration)
         {
-            services.AddEntityFrameworkSqlServer();
+            //services.AddEntityFrameworkSqlServer();
 
-            string connString = configuration["ConnectionStrings:SQLServer"];//Configuration.GetConnectionString("SQLServer");
+            //string connString = configuration["ConnectionStrings:SQLServer"];//Configuration.GetConnectionString("SQLServer");
+
+            //services.AddDbContext<OMSDbContext>(options =>
+            //options.UseSqlServer(connString));
 
             services.AddDbContext<OMSDbContext>(options =>
-            options.UseSqlServer(connString));
+            options.UseSqlServer(
+                       configuration.GetConnectionString("SQLServer"),
+                       b => b.MigrationsAssembly(typeof(OMSDbContext).Assembly.FullName)));
 
             services.AddScoped<IUnitOfWork>(ctx => new EFUnitOfWork(ctx.GetRequiredService<OMSDbContext>()));
         }
@@ -75,6 +83,10 @@ namespace OMS.DI
                         return serviceProvider.GetService<MemoryCacheService>();
                 }
             });
+
+            // строка подключения для хранения данных задания Hangfire
+            services.AddHangfire(x => x.UseSqlServerStorage(configuration.GetConnectionString("SQLServer")));
+            services.AddHangfireServer();
         }
     }
 }

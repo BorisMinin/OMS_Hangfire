@@ -5,6 +5,6 @@
     /// </summary>
     public enum CacheTech
     { //todo: добавить когда-нибудь Reddis
-        Memory
+        Memory // кэширование в памяти
     }
 }

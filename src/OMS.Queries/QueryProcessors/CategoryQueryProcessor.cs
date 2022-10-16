@@ -2,22 +2,30 @@
 using OMS.API.Models.Dtos.CategoryDto;
 using OMS.Data.Access.DAL;
 using OMS.Data.Model.Entities;
+using OMS.Queries.AppHelpers;
+using OMS.Queries.CrossCuttingConcerns;
 using OMS.Queries.Interfaces;
+using System.Collections.Generic;
 
 namespace OMS.Queries.QueryProcessors
 {
     public class CategoryQueryProcessor : ICategoryQueryProcessor
     {
-        private IUnitOfWork _unitOfWork;
+        private IUnitOfWork _unitOfWork;    
+        private readonly string cacheKey = $"{typeof(Category)}";
+        private readonly static CacheTech cacheTech = CacheTech.Memory;
 
-        public CategoryQueryProcessor(IUnitOfWork unitOfWork)
+        private Func<CacheTech, ICacheService> _cacheService;
+
+        public CategoryQueryProcessor(IUnitOfWork unitOfWork, Func<CacheTech, ICacheService> cacheService)
         {
             _unitOfWork = unitOfWork;
+            _cacheService = cacheService;
         }
 
         public IQueryable<Category> Get()
         {
-            return GetQuery();
+            return _cacheService(cacheTech).GetCache<Category>(_unitOfWork, cacheKey);
         }
 
         private IQueryable<Category> GetQuery()
@@ -62,6 +70,13 @@ namespace OMS.Queries.QueryProcessors
 
             _unitOfWork.Delete(category, token);
             await _unitOfWork.CommitAsync(token);
+        }
+       
+        public async Task RefreshCache()
+        {
+            _cacheService(cacheTech).Remove(cacheKey);
+            var cachedList = await _unitOfWork.Query<Category>().ToListAsync();
+            _cacheService(cacheTech).Set(cacheKey, cachedList);
         }
     }
 }

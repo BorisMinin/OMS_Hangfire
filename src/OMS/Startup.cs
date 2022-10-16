@@ -1,4 +1,5 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Hangfire;
+using Microsoft.OpenApi.Models;
 using OMS.DI;
 
 namespace OMS
@@ -43,6 +44,9 @@ namespace OMS
             app.UseRouting();
 
             app.UseAuthorization();
+
+            //путь, по которому отслеживается задания Hangfire через панель мониторинга 
+            app.UseHangfireDashboard("/jobs");
 
             app.UseEndpoints(endpoints =>
             {

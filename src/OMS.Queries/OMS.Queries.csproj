@@ -12,6 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Hangfire.Core" Version="1.7.31" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\OMS.API.Models\OMS.API.Models.csproj" />
     <ProjectReference Include="..\OMS.Data.Access\OMS.Data.Access.csproj" />
     <ProjectReference Include="..\OMS.Data.Model\OMS.Data.Model.csproj" />

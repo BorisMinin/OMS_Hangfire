@@ -8,7 +8,8 @@ namespace OMS.Data.Access.DAL
     {
         public OMSDbContext(DbContextOptions<OMSDbContext> options) : base(options)
         {
-            //Database.EnsureCreated(); 
+            //Database.EnsureCreated();
+            ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         }
         // Представление набора сущностей
         DbSet<Category> Categories { get; set; }
